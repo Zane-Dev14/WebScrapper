@@ -69,7 +69,7 @@ try:
                 if is_google_drive_link(download_url):
                     # Extract the file ID from the download URL
                     file_id = download_url.split('/')[-2]
-
+                    # print(file_id)
                     # Get the file metadata to obtain the filename
                     file = drive_service.files().get(fileId=file_id).execute()
                     filename = file['name']
@@ -77,20 +77,24 @@ try:
 
                     # Create a subdirectory for the batch
                     try:
-                        os.mkdir(os.path.join(download_directory, subname))
+                        os.mkdir("/home/coding/study/pdf/"+subname)
                     except FileExistsError:
                         pass
-                    time.sleep(10)
+                    time.sleep(5)
                     # Specify the local file path
                     local_file_path = os.path.join(download_directory, subname, " ".join(filename.split()[0:3]) + ".pdf")
 
                     # Download the file and save it locally
 # Download the file and save it locally
+                    request = drive_service.files().get_media(fileId=file_id)
+                    # print(file_id)
                     with open(local_file_path, 'wb') as f:
-                        response = requests.get(download_url, stream=True)
-                        response.raise_for_status()
-                        for chunk in response.iter_content(chunk_size=8192):
-                            f.write(chunk)
+                        downloader = MediaIoBaseDownload(f, request)
+                        done = False
+                        while not done:
+                            status, done = downloader.next_chunk()
+                            print(f"Download {int(status.progress() * 100)}%")
+
 
 
                     print(f"Downloaded: {filename} to {local_file_path}")
